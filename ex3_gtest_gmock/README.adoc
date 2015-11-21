@@ -1,0 +1,6 @@
+= GoogleTest and GoogleMock (gtest, gmock)
+:source-highlighter: prettify
+//                   coderay highlightjs prettify pygments
+:coderay-linenums-mode: inline
+
+Adapted from http://crascit.com/2015/07/25/cmake-gtest/
