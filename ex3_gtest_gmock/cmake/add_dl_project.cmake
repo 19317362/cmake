@@ -37,7 +37,7 @@ function(add_dl_project)
     # include directories
     foreach(loop_inc_var ${DL_ARGS_INCLUDE_DIRS})
           #target_include_directories(gtest INTERFACE "${CMAKE_BINARY_DIR}/${DL_ARGS_PROJ}-src/${loop_inc_var}")
-          include_directories(${DL_ARGS_PROJ} INTERFACE "${CMAKE_BINARY_DIR}/${DL_ARGS_PROJ}-src/${loop_inc_var}")
+          include_directories("${CMAKE_BINARY_DIR}/${DL_ARGS_PROJ}-src/${loop_inc_var}")
     endforeach()
 
 endfunction()
