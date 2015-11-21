@@ -1,0 +1,64 @@
+= GoogleTest and GoogleMock (gtest, gmock)
+:source-highlighter: prettify
+//                   coderay highlightjs prettify pygments
+:coderay-linenums-mode: inline
+
+== Usage
+
+You have 3 options:
+
+Option 1::
++
+[source,bash]
+----
+export GMOCK_INCLUDE=/path/to/gmock/include
+export GMOCK_LIB_REL=/path/to/gmock/library_release
+export GMOCK_LIB_DBG=/path/to/gmock/library_debug
+
+export GTEST_INCLUDE=/path/to/gtest/include
+export GTEST_LIB_REL=/path/to/gtest/library_release
+export GTEST_LIB_DBG=/path/to/gtest/library_debug
+----
+Option 2 (Recommended!!!)::
++
+Create a file `~/toolchain_desktop.cmake` with content such as
++
+[source,cmake]
+----
+###
+### GoogleMock
+###
+
+if (NOT EXISTS $ENV{GMOCK_INCLUDE})
+   set(ENV{GMOCK_INCLUDE} "/path/to/gmock/include")
+endif()
+
+if (NOT EXISTS $ENV{GMOCK_LIB_REL})
+   set(ENV{GMOCK_LIB_REL} "/path/to/gmock/library_release")
+endif()
+
+if (NOT EXISTS $ENV{GMOCK_LIB_DBG})
+   set(ENV{GMOCK_LIB_DBG} "/path/to/gmock/library_debug")
+endif()
+
+###
+### GoogleTest
+###
+
+if (NOT EXISTS $ENV{GTEST_INCLUDE})
+   set(ENV{GTEST_INCLUDE} "/path/to/gtest/include")
+endif()
+
+if (NOT EXISTS $ENV{GTEST_LIB_REL})
+   set(ENV{GTEST_LIB_REL} "/path/to/gtest/library_release")
+endif()
+
+if (NOT EXISTS $ENV{GTEST_LIB_DBG})
+   set(ENV{GTEST_LIB_DBG} "/path/to/gtest/library_debug")
+endif()
+----
++
+TIP: Running link:setup_google_test.sh[`setup_google_test.sh`] will install gmock and gtest in `~/local/desktop_rootfilesystem/googletest/` and *create an appropriate `~/toolchain_desktop.cmake` for you*.
+Option 3::
++
+Just run cmake! It uses cmake's https://cmake.org/cmake/help/latest/module/ExternalProject.html[ExternalProject] to clone gmock and gtest into the build_directory automatically.
