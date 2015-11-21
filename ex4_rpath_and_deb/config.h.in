@@ -1,0 +1,9 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define TUTORIAL_VERSION_MAJOR @TUTORIAL_version_major@
+#define TUTORIAL_VERSION_MINOR @TUTORIAL_version_minor@
+
+#cmakedefine USE_MYSQRT
+
+#endif

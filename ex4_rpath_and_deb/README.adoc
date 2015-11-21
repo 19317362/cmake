@@ -1,0 +1,4 @@
+= Cmake for handling RPath and deb
+:source-highlighter: prettify
+//                   coderay highlightjs prettify pygments
+:coderay-linenums-mode: inline
