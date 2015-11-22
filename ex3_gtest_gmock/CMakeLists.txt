@@ -52,8 +52,8 @@ add_dl_project(
 
   EXCLUDE_FROM_ALL
   INCLUDE_DIRS   googlemock/include googletest/include
-  PATCH_COMMAND  "${CMAKE_COMMAND} -E echo cmake_minimum_required(VERSION 3.2) > CMakeLists.txt" COMMAND "${CMAKE_COMMAND} -E echo add_subdirectory(googlemock) >> CMakeLists.txt"
-  # PATCH_COMMAND "echo cmake_minimum_required(VERSION 3.2) > CMakeLists.txt" COMMAND "echo add_subdirectory(googlemock)  >> CMakeLists.txt"
+  PATCH_COMMAND  "${CMAKE_COMMAND} -E echo \"cmake_minimum_required(VERSION 3.2)\" > CMakeLists.txt" COMMAND "${CMAKE_COMMAND} -E echo \"add_subdirectory(googlemock)\" >> CMakeLists.txt"
+  #PATCH_COMMAND "echo \"cmake_minimum_required(VERSION 3.2)\" > CMakeLists.txt" COMMAND "echo \"add_subdirectory(googlemock)\"  >> CMakeLists.txt"
 )
 
 
