@@ -40,6 +40,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(BUILD_TESTING ON)
 include(CTest)
 
+
+
+# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+#   # see https://www.johnlamp.net/cmake-tutorial-4-libraries-and-subdirectories.html
+#   # see http://stackoverflow.com/a/11921648
+#   #
+#   # force this option to ON so that Google Test will use /MD instead of /MT
+#   # /MD is now the default for Visual Studio, so it should be our default, too
+#   option(gtest_force_shared_crt
+#     "Use shared (DLL) run-time lib even when Google Test is built as static lib."
+#     ON)
+# endif()
+
 # Download gtest_gmock at configure time
 include(cmake/add_dl_project.cmake)
 add_dl_project(
@@ -52,10 +65,23 @@ add_dl_project(
 
   EXCLUDE_FROM_ALL
   INCLUDE_DIRS   googlemock/include googletest/include
-  PATCH_COMMAND "echo cmake_minimum_required(VERSION 3.2) > CMakeLists.txt" COMMAND "echo \"add_subdirectory(googlemock)\"  >> CMakeLists.txt"
+
+  # see https://www.johnlamp.net/cmake-tutorial-4-libraries-and-subdirectories.html
+  # see http://stackoverflow.com/a/11921648
+  PATCH_COMMAND "echo cmake_minimum_required(VERSION 3.2)                                               > CMakeLists.txt"
+        COMMAND "echo \"add_subdirectory(googlemock)\"                                                   >> CMakeLists.txt"
+        COMMAND "echo \"if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)\"                                    >> CMakeLists.txt"
+        COMMAND "echo \"  # force this option to ON so that Google Test will use /MD instead of /MT\"    >> CMakeLists.txt"
+        COMMAND "echo \"  # /MD is now the default for Visual Studio, so it should be our default, too\" >> CMakeLists.txt"
+        COMMAND "echo \"  option(gtest_force_shared_crt Use_shared_DLL_run_time_lib_even_when_Google_Test_is_built_as_static_lib\" >> CMakeLists.txt"
+        COMMAND "echo \"  ON)\"   >> CMakeLists.txt"
+        COMMAND "echo \"endif()\" >> CMakeLists.txt"
+
   #PATCH_COMMAND  "${CMAKE_COMMAND} -E echo \"cmake_minimum_required(VERSION 3.2)\" > CMakeLists.txt" COMMAND "${CMAKE_COMMAND} -E echo \"add_subdirectory(googlemock)\" >> CMakeLists.txt"
   #PATCH_COMMAND "echo \"cmake_minimum_required(VERSION 3.2)\" > CMakeLists.txt" COMMAND "echo \"add_subdirectory(googlemock)\"  >> CMakeLists.txt"
 )
+
+
 
 
 # Example for how to define a test which uses gtest_gmock
