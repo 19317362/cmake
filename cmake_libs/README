@@ -2,3 +2,8 @@ try (after emptying build-directory) calling CMAKE with either
   cmake -DBUILD_SHARED_LIBS=ON ..
 or (after again empying build-directory)
   cmake -DBUILD_SHARED_LIBS=OFF ..
+
+Reading...
+http://stackoverflow.com/a/8449278
+http://stackoverflow.com/a/33100078
+http://stackoverflow.com/questions/31512485/cmake-how-to-setup-source-library-and-cmakelists-txt-dependencies (see "The summaries can be found in my following answers")
