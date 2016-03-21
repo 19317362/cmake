@@ -1,0 +1,4 @@
+try (after emptying build-directory) calling CMAKE with either
+  cmake -DBUILD_SHARED_LIBS=ON ..
+or (after again empying build-directory)
+  cmake -DBUILD_SHARED_LIBS=OFF ..
