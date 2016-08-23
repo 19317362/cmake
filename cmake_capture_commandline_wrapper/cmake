@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Cmake wrapper script that captures/stores cmake command-line arguments
 #
 # Place this file into this location: ~/bin/cmake
 # (with executable rights)
@@ -85,12 +84,14 @@ read -r -d '' NON_STORE_ARGUMENTS <<'EOF'
 --help-variables
 EOF
 
+NON_STORE_ARGUMENTS=$(echo "$NON_STORE_ARGUMENTS" | head -c -1 `# remove last newline` | sed "s/^/^/g" `#begin every line with ^` | tr '\n' '|')
 
+#echo "$NON_STORE_ARGUMENTS" ## for debug purposes
 
 ## store all the args
 ARGS_STR=
 for arg in "$@"; do
-    if echo "$arg" | grep -F -- "$NON_STORE_ARGUMENTS" &> /dev/null; then
+    if echo "$arg" | grep -E -- "$NON_STORE_ARGUMENTS" &> /dev/null; then
         # do not create cmake_call.sh
         cmake "$@"
         exit
