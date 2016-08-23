@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+
+# Cmake wrapper script that captures/stores cmake command-line arguments
+#
+# Place this file into this location: ~/bin/cmake
+# (with executable rights)
+#
+# This is a wrapper for cmake!
+# * It calls cmake -- see last line of the script
+# It also:
+# * Creates a file cmake_call.sh in the current directory (build-directory)
+#   which stores the cmake-call with all it's cmake-flags etc.
+#   (It also stores successive calls to cmake, so that you have a trace of all your cmake calls)
+#
+# You can simply reinvoke the last cmake commandline with: ./cmake_call.sh  !!!!!!!!!!
+#
+# cmake_call.sh is not created
+#   when cmake is called without any flags,
+#   or when it is called with flags such as --help, -E, -P, etc. (refer to NON_STORE_ARGUMENTS -- you might need to modify it to suit your needs)
+
+SCRIPT_PATH=$(readlink -f "$BASH_SOURCE")
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+
+#http://stackoverflow.com/a/13864829
+if [ -z ${SUDO_USER+x} ]; then
+    # var SUDO_USER is unset
+    user=$USER
+else
+    user=$SUDO_USER
+fi
+
+
+#http://stackoverflow.com/a/34621068
+path_append ()  { path_remove $1 $2; export $1="${!1}:$2"; }
+path_prepend()  { path_remove $1 $2; export $1="$2:${!1}"; }
+path_remove ()  { export $1="`echo -n ${!1} | awk -v RS=: -v ORS=: '$1 != "'$2'"' | sed 's/:$//'`"; }
+
+path_remove PATH ~/bin # when calling cmake (at the bottom of this script), do not invoke this script again!
+
+
+
+
+# when called with no arguments, don't create cmake_call.sh
+if [[ -z "$@" ]]; then
+   cmake "$@"
+   exit
+fi
+
+
+# variable NON_STORE_ARGUMENTS stores flags which, if any are present, cause cmake_call.sh to NOT be created
+read -r -d '' NON_STORE_ARGUMENTS <<'EOF'
+-E
+--build
+#-N
+-P
+--graphviz
+--system-information
+--debug-trycompile
+#--debug-output
+--help
+-help
+-usage
+-h
+-H
+--version
+-version
+/V
+--help-full
+--help-manual
+--help-manual-list
+--help-command
+--help-command-list
+--help-commands
+--help-module
+--help-module-list
+--help-modules
+--help-policy
+--help-policy-list
+--help-policies
+--help-property
+--help-property-list
+--help-properties
+--help-variable
+--help-variable-list
+--help-variables
+EOF
+
+
+
+## store all the args
+ARGS_STR=
+for arg in "$@"; do
+    if echo "$arg" | grep -F -- "$NON_STORE_ARGUMENTS" &> /dev/null; then
+        # do not create cmake_call.sh
+        cmake "$@"
+        exit
+    fi
+
+    # concatenate to ARGS_STR
+    ARGS_STR="${ARGS_STR}$(echo -n " \"$arg\"" | sed "s,\($(pwd)\)\(\([/ \t,:;'\"].*\)\?\)$,\$(pwd)\2,g")"
+    #                                             replace $(pwd) followed by
+    #                                                                  /             or
+    #                                                                   whitespace   or
+    #                                                                      ,         or
+    #                                                                       :        or
+    #                                                                        ;       or
+    #                                                                         '      or
+    #                                                                           "
+    #                                                                    or nothing
+    #                                             with \$(pwd)
+done
+
+
+
+
+
+
+
+
+
+if [[ ! -e $(pwd)/cmake_call.sh ]]; then
+echo    "#!/usr/bin/env bash" >  $(pwd)/cmake_call.sh
+
+# escaping:
+# note in the HEREDOC below, \\ means \ in the output!!
+#                            \$ means $ in the output!!
+#                            \` means ` in the output!!
+cat <<EOF                     >>  $(pwd)/cmake_call.sh
+
+
+#http://stackoverflow.com/a/34621068
+path_remove ()  { export \$1="\`echo -n \${!1} | awk -v RS=: -v ORS=: '\$1 != "'\$2'"' | sed 's/:\$//'\`"; }
+
+path_remove PATH ~/bin # when calling cmake (at the bottom of this script), do not invoke ~/bin/cmake but real cmake!
+
+
+EOF
+else
+    # remove bottom 2 lines from cmake_call.sh
+    sed -i '$ d' $(pwd)/cmake_call.sh
+    sed -i '$ d' $(pwd)/cmake_call.sh
+fi
+
+
+echo "ARGS='${ARGS_STR}'" >> $(pwd)/cmake_call.sh
+echo "echo cmake \"\$ARGS\""  >> $(pwd)/cmake_call.sh
+echo "eval cmake \"\$ARGS\""  >> $(pwd)/cmake_call.sh
+#echo "eval which cmake"       >> $(pwd)/cmake_call.sh
+
+chmod +x     $(pwd)/cmake_call.sh
+chown $user: $(pwd)/cmake_call.sh
+
+cmake "$@"
