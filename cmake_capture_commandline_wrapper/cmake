@@ -91,7 +91,9 @@ NON_STORE_ARGUMENTS=$(echo "$NON_STORE_ARGUMENTS" | head -c -1 `# remove last ne
 ## store all the args
 ARGS_STR=
 for arg in "$@"; do
-    if echo "$arg" | grep -E -- "$NON_STORE_ARGUMENTS" &> /dev/null; then
+    if cat <<< "$arg" | grep -E -- "$NON_STORE_ARGUMENTS" &> /dev/null; then  # don't use   echo "$arg"  ....
+                                                                              # since echo "-E"    does not do what you want here,
+                                                                              # but   cat <<< "-E" does what you want (print minus E)
         # do not create cmake_call.sh
         cmake "$@"
         exit
