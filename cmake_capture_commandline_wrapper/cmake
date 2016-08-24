@@ -136,6 +136,37 @@ path_remove ()  { export \$1="\`echo -n \${!1} | awk -v RS=: -v ORS=: '\$1 != "'
 path_remove PATH ~/bin # when calling cmake (at the bottom of this script), do not invoke ~/bin/cmake but real cmake!
 
 
+
+
+if [[ ! -e \$(pwd)/CMakeCache.txt ]]; then
+
+    # remove bottom 2 lines from cmake_call.sh
+    sed -i '$ d' \$(pwd)/cmake_call.sh
+    sed -i '$ d' \$(pwd)/cmake_call.sh
+
+    # if CMakeCache.txt does not exists, and env-variables CC or CXX are defined, then capture those env-variables
+    if [[ -n "\$CC" ]]; then
+        bottom_most_CC=\$(cat \$(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\\(.*\\)".*/\\1/p') # bottom-most CC in script
+        if [[ "\$CC" != "\$bottom_most_CC" ]]; then
+            echo "if [[ -z \\\$fresh_cmake_with_CC  ]]; then export CC=\\"\${CC}\\"; fi"   >> \$(pwd)/cmake_call.sh
+        fi
+        fresh_cmake_with_CC=1
+    fi
+    if [[ -n "\$CXX" ]]; then
+        bottom_most_CXX=\$(cat \$(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\\(.*\\)".*/\\1/p') # bottom-most CXX in script
+        if [[ "\$CXX" != "\$bottom_most_CXX" ]]; then
+            echo "if [[ -z \\\$fresh_cmake_with_CXX ]]; then export CXX=\\"\${CXX}\\"; fi" >> \$(pwd)/cmake_call.sh
+        fi
+        fresh_cmake_with_CXX=1
+    fi
+
+    # add bottom 2 lines again
+    echo "echo cmake \\"\\\$ARGS\\""  >> \$(pwd)/cmake_call.sh
+    echo "eval cmake \\"\\\$ARGS\\""  >> \$(pwd)/cmake_call.sh
+fi
+
+
+
 EOF
 else
     # remove bottom 2 lines from cmake_call.sh
@@ -148,10 +179,16 @@ fi
 if [[ ! -e $(pwd)/CMakeCache.txt ]]; then
     # if CMakeCache.txt does not exists, and env-variables CC or CXX are defined, then capture those env-variables
     if [[ -n "$CC" ]]; then
-        echo "export CC=\"${CC}\""   >> $(pwd)/cmake_call.sh
+        bottom_most_CC=$(cat $(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\(.*\)".*/\1/p') # bottom-most CC in script
+        if [[ "$CC" != "$bottom_most_CC" ]]; then
+            echo "if [[ -z \$fresh_cmake_with_CC  ]]; then export CC=\"${CC}\"; fi"   >> $(pwd)/cmake_call.sh
+        fi
     fi
     if [[ -n "$CXX" ]]; then
-        echo "export CXX=\"${CXX}\"" >> $(pwd)/cmake_call.sh
+        bottom_most_CXX=$(cat $(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\(.*\)".*/\1/p') # bottom-most CXX in script
+        if [[ "$CXX" != "$bottom_most_CXX" ]]; then
+            echo "if [[ -z \$fresh_cmake_with_CXX]]; then export CXX=\"${CXX}\"; fi" >> $(pwd)/cmake_call.sh
+        fi
     fi
 fi
 
