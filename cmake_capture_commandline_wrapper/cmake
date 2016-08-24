@@ -120,7 +120,6 @@ done
 
 
 
-
 if [[ ! -e $(pwd)/cmake_call.sh ]]; then
 echo    "#!/usr/bin/env bash" >  $(pwd)/cmake_call.sh
 
@@ -144,6 +143,17 @@ else
     sed -i '$ d' $(pwd)/cmake_call.sh
 fi
 
+
+
+if [[ ! -e $(pwd)/CMakeCache.txt ]]; then
+    # if CMakeCache.txt does not exists, and env-variables CC or CXX are defined, then capture those env-variables
+    if [[ -n "$CC" ]]; then
+        echo "export CC=\"${CC}\""   >> $(pwd)/cmake_call.sh
+    fi
+    if [[ -n "$CXX" ]]; then
+        echo "export CXX=\"${CXX}\"" >> $(pwd)/cmake_call.sh
+    fi
+fi
 
 echo "ARGS='${ARGS_STR}'" >> $(pwd)/cmake_call.sh
 echo "echo cmake \"\$ARGS\""  >> $(pwd)/cmake_call.sh
