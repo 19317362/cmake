@@ -137,35 +137,33 @@ path_remove PATH ~/bin # when calling cmake (at the bottom of this script), do n
 
 
 
+handle_CC_CXX_env_variables () { ## will possibly set these globals: fresh_cmake_with_CC fresh_cmake_with_CXX
+    if [[ ! -e \$(pwd)/CMakeFiles && ! -e \$(pwd)/CMakeCache.txt ]]; then
 
-if [[ ! -e \$(pwd)/CMakeCache.txt ]]; then
+        # remove bottom 2 lines from cmake_call.sh
+        sed -i '$ d' \$(pwd)/cmake_call.sh
+        sed -i '$ d' \$(pwd)/cmake_call.sh
 
-    # remove bottom 2 lines from cmake_call.sh
-    sed -i '$ d' \$(pwd)/cmake_call.sh
-    sed -i '$ d' \$(pwd)/cmake_call.sh
-
-    # if CMakeCache.txt does not exists, and env-variables CC or CXX are defined, then capture those env-variables
-    if [[ -n "\$CC" ]]; then
-        bottom_most_CC=\$(cat \$(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\\(.*\\)".*/\\1/p') # bottom-most CC in script
+        # if CMakeFiles does not exists, and env-variables CC or CXX change, then capture those env-variables
+        local bottom_most_CC=\$(cat \$(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\\(.*\\)".*/\\1/p') # bottom-most CC in script
         if [[ "\$CC" != "\$bottom_most_CC" ]]; then
             echo "if [[ -z \\\$fresh_cmake_with_CC  ]]; then export CC=\\"\${CC}\\"; fi"   >> \$(pwd)/cmake_call.sh
+            fresh_cmake_with_CC=1
         fi
-        fresh_cmake_with_CC=1
-    fi
-    if [[ -n "\$CXX" ]]; then
-        bottom_most_CXX=\$(cat \$(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\\(.*\\)".*/\\1/p') # bottom-most CXX in script
+
+        local bottom_most_CXX=\$(cat \$(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\\(.*\\)".*/\\1/p') # bottom-most CXX in script
         if [[ "\$CXX" != "\$bottom_most_CXX" ]]; then
             echo "if [[ -z \\\$fresh_cmake_with_CXX ]]; then export CXX=\\"\${CXX}\\"; fi" >> \$(pwd)/cmake_call.sh
+            fresh_cmake_with_CXX=1
         fi
-        fresh_cmake_with_CXX=1
+
+        # add bottom 2 lines again
+        echo "echo cmake \\"\\\$ARGS\\""  >> \$(pwd)/cmake_call.sh
+        echo "eval cmake \\"\\\$ARGS\\""  >> \$(pwd)/cmake_call.sh
     fi
+}
 
-    # add bottom 2 lines again
-    echo "echo cmake \\"\\\$ARGS\\""  >> \$(pwd)/cmake_call.sh
-    echo "eval cmake \\"\\\$ARGS\\""  >> \$(pwd)/cmake_call.sh
-fi
-
-
+handle_CC_CXX_env_variables
 
 EOF
 else
@@ -176,23 +174,26 @@ fi
 
 
 
-if [[ ! -e $(pwd)/CMakeCache.txt ]]; then
-    # if CMakeCache.txt does not exists, and env-variables CC or CXX are defined, then capture those env-variables
-    if [[ -n "$CC" ]]; then
-        bottom_most_CC=$(cat $(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\(.*\)".*/\1/p') # bottom-most CC in script
+handle_CC_CXX_env_variables () {
+    if [[ ! -e $(pwd)/CMakeFiles && ! -e $(pwd)/CMakeCache.txt ]]; then
+        # if CMakeFiles does not exists, and env-variables CC or CXX are defined, then capture those env-variables
+        local bottom_most_CC=$(cat $(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\(.*\)".*/\1/p') # bottom-most CC in script
         if [[ "$CC" != "$bottom_most_CC" ]]; then
             echo "if [[ -z \$fresh_cmake_with_CC  ]]; then export CC=\"${CC}\"; fi"   >> $(pwd)/cmake_call.sh
         fi
-    fi
-    if [[ -n "$CXX" ]]; then
-        bottom_most_CXX=$(cat $(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\(.*\)".*/\1/p') # bottom-most CXX in script
+        local bottom_most_CXX=$(cat $(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\(.*\)".*/\1/p') # bottom-most CXX in script
         if [[ "$CXX" != "$bottom_most_CXX" ]]; then
-            echo "if [[ -z \$fresh_cmake_with_CXX]]; then export CXX=\"${CXX}\"; fi" >> $(pwd)/cmake_call.sh
+            echo "if [[ -z \$fresh_cmake_with_CXX ]]; then export CXX=\"${CXX}\"; fi" >> $(pwd)/cmake_call.sh
         fi
     fi
-fi
+}
 
-echo "ARGS='${ARGS_STR}'" >> $(pwd)/cmake_call.sh
+handle_CC_CXX_env_variables
+
+bottom_most_ARGS=$(cat $(pwd)/cmake_call.sh | grep "^ARGS='" | tail -1 | sed -n "s/^ARGS='\(.*\)'.*/\1/p") # bottom-most ARGS in script
+if [[ "$bottom_most_ARGS" != "$ARGS_STR" ]]; then
+    echo "ARGS='${ARGS_STR}'" >> $(pwd)/cmake_call.sh
+fi
 echo "echo cmake \"\$ARGS\""  >> $(pwd)/cmake_call.sh
 echo "eval cmake \"\$ARGS\""  >> $(pwd)/cmake_call.sh
 #echo "eval which cmake"       >> $(pwd)/cmake_call.sh
