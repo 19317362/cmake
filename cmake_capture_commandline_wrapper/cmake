@@ -9,9 +9,13 @@
 # It also:
 # * Creates a file cmake_call.sh in the current directory (build-directory)
 #   which stores the cmake-call with all it's cmake-flags etc.
-#   (It also stores successive calls to cmake, so that you have a trace of all your cmake calls)
+#   It also stores successive calls to cmake, so that you have a trace of all your cmake calls.
+#   (It also stores environment variables CC and CXX, if these result in a change when calling cmake)
 #
 # You can simply reinvoke the last cmake commandline with: ./cmake_call.sh  !!!!!!!!!!
+#                If unset CC; unset CXX ; then this will also set those variables, to what they were the last time.
+#                If you set CC and CXX, then those new settings will be used, when calling ./cmake_call.sh (allowing you to easily change compiler)
+#                (Note that for env-varialbes CC and CXX to have an effect, CMakeFiles and CMakeCache.txt must have been cleared, before calling ./cmake_call.sh)
 #
 # cmake_call.sh is not created
 #   when cmake is called without any flags,
@@ -145,16 +149,23 @@ handle_CC_CXX_env_variables () { ## will possibly set these globals: fresh_cmake
         sed -i '$ d' \$(pwd)/cmake_call.sh
 
         # if CMakeFiles does not exists, and env-variables CC or CXX change, then capture those env-variables
-        local bottom_most_CC=\$(cat \$(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\\(.*\\)".*/\\1/p') # bottom-most CC in script
-        if [[ "\$CC" != "\$bottom_most_CC" ]]; then
-            echo "if [[ -z \\\$fresh_cmake_with_CC  ]]; then export CC=\\"\${CC}\\"; fi"   >> \$(pwd)/cmake_call.sh
+        if [[ -n \${CC+x} ]]; then
+            ## CC is defined
             fresh_cmake_with_CC=1
-        fi
 
-        local bottom_most_CXX=\$(cat \$(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\\(.*\\)".*/\\1/p') # bottom-most CXX in script
-        if [[ "\$CXX" != "\$bottom_most_CXX" ]]; then
-            echo "if [[ -z \\\$fresh_cmake_with_CXX ]]; then export CXX=\\"\${CXX}\\"; fi" >> \$(pwd)/cmake_call.sh
+            local bottom_most_CC=\$(cat \$(pwd)/cmake_call.sh | grep 'export CC="' | tail -1 | sed -n 's/.*export CC="\\(.*\\)".*/\\1/p') # bottom-most CC in script
+            if [[ "\$CC" != "\$bottom_most_CC" ]]; then
+                echo "if [[ -z \\\$fresh_cmake_with_CC  ]]; then export CC=\\"\${CC}\\"; fi"   >> \$(pwd)/cmake_call.sh
+            fi
+        fi
+        if [[ -n \${CXX+x} ]]; then
+            ## CXX is defined
             fresh_cmake_with_CXX=1
+
+            local bottom_most_CXX=\$(cat \$(pwd)/cmake_call.sh | grep 'export CXX="' | tail -1 | sed -n 's/.*export CXX="\\(.*\\)".*/\\1/p') # bottom-most CXX in script
+            if [[ "\$CXX" != "\$bottom_most_CXX" ]]; then
+                echo "if [[ -z \\\$fresh_cmake_with_CXX ]]; then export CXX=\\"\${CXX}\\"; fi" >> \$(pwd)/cmake_call.sh
+            fi
         fi
 
         # add bottom 2 lines again
